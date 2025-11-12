@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pro BG Removal</title>
+  <style>
+    :root{
+      --bg-1: #071827; /* gradient start */
+      --bg-2: #06283d; /* gradient end */
+      --accent: #06b6d4; /* cyan */
+      --accent-2: #7c3aed; /* purple */
+      --card: rgba(255,255,255,0.03);
+      --muted: #9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+      --radius: 14px;
+      --transition: 280ms cubic-bezier(.2,.9,.3,1);
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg-1),var(--bg-2));color:#e6eef8;min-height:100vh;display:flex;flex-direction:column}
+
+    /* Header */
+    header.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter: blur(6px);box-shadow:0 6px 24px rgba(2,6,23,0.45)}
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#021124;box-shadow:0 8px 28px rgba(7,18,39,0.6)}
+    nav{display:flex;gap:18px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:10px;transition:all var(--transition)}
+    nav a.active{color:var(--accent);background:rgba(255,255,255,0.01);box-shadow:inset 0 0 18px rgba(124,58,237,0.06)}
+
+    main.container{width:100%;max-width:1200px;margin:28px auto;padding:18px;display:grid;grid-template-columns:1fr 380px;gap:22px}
+    @media (max-width:1100px){main.container{grid-template-columns:1fr;padding:12px}nav{display:none}}
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:var(--radius);padding:18px;box-shadow:0 8px 40px rgba(2,6,23,0.55);overflow:hidden}
+
+    /* Drop area */
+    .drop{border:2px dashed rgba(255,255,255,0.04);padding:26px;border-radius:12px;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;transition:transform var(--transition),border-color var(--transition)}
+    .drop.dragover{border-color:rgba(124,58,237,0.9);transform:translateY(-6px)}
+    .drop input{display:none}
+    .btn{background:linear-gradient(90deg,var(--accent-2),var(--accent));border:none;padding:10px 14px;border-radius:10px;color:#021124;font-weight:700;cursor:pointer;letter-spacing:0.2px;transition:transform var(--transition)}
+    .btn:hover{transform:translateY(-4px)}
+
+    .thumbs{display:flex;gap:12px;align-items:center}
+    .thumb{width:130px;height:130px;border-radius:12px;overflow:hidden;background:var(--glass);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(2,6,23,0.5);transition:transform var(--transition)}
+    .thumb img{max-width:100%;height:100%;object-fit:cover}
+
+    .controls{display:flex;gap:10px;align-items:center}
+
+    /* Sidebar */
+    .sidebar .field{margin-bottom:12px}
+    label.select{display:block;margin-bottom:6px;color:var(--muted);font-size:13px}
+    select,input[type=text],input[type=color]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+
+    .result-preview img{max-width:100%;border-radius:10px;box-shadow:0 10px 40px rgba(2,6,23,0.6)}
+
+    footer.small{margin-top:16px;color:var(--muted);font-size:13px}
+
+    /* Animations */
+    .fade-enter{opacity:0;transform:translateY(8px)}
+    .fade-enter.fade-enter-active{opacity:1;transform:none;transition:opacity 320ms ease,transform 320ms ease}
+
+    .nav-right{display:flex;gap:12px;align-items:center}
+
+    .top-actions{display:flex;gap:8px}
+
+    @media (max-width:700px){.design-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">BG</div>
+      <div>
+        <div style="font-weight:700">Pro BG Removal</div>
+        <div style="font-size:12px;color:var(--muted)">Modern UI • Drag & drop</div>
+      </div>
+    </div>
+
+    <nav id="mainNav">
+      <a href="#home" data-page="home" class="active">Home</a>
+    </nav>
+
+    <div class="nav-right">
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HOME PAGE -->
+    <section id="home" class="card page" data-page="home">
+      <div id="dropzone" class="drop">
+        <input id="fileInput" type="file" accept="image/*">
+        <div class="thumbs" id="thumbs"></div>
+        <div style="text-align:center">
+          <div style="font-weight:800;font-size:18px">Drop your image here</div>
+          <div class="small" style="color:var(--muted);margin-top:6px">or click to browse — supports JPG/PNG up to provider limits</div>
+          <div style="margin-top:12px" class="controls">
+            <button id="browseBtn" class="btn">Browse</button>
+            <button id="removeBgBtn" class="btn">Remove Background</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center;justify-content:space-between">
+        <div style="flex:1">
+          <div class="label small">Progress</div>
+          <div style="height:8px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden"><i id="progressBar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent-2),var(--accent))"></i></div>
+        </div>
+        <div style="width:260px;text-align:right" id="status">Ready</div>
+      </div>
+
+    </section>
+
+    <!-- SIDEBAR (common) -->
+    <aside class="card sidebar">
+
+      <div class="field">
+        <label class="select">Result Preview</label>
+        <div class="result-preview" id="resultWrap">
+          <div class="small">No result yet</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button id="downloadBtn" class="btn" disabled>Download PNG</button>
+        <button id="resetBtn" class="btn" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)">Reset</button>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <script>
+    // UI elements
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const removeBgBtn = document.getElementById('removeBgBtn');
+    const thumbs = document.getElementById('thumbs');
+    const resultWrap = document.getElementById('resultWrap');
+    const progressBar = document.getElementById('progressBar');
+    const status = document.getElementById('status');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let currentFile = null;
+    let currentResultBlob = null;
+
+    // File handling
+    browseBtn.addEventListener('click',()=>fileInput.click());
+    dropzone.addEventListener('click',()=>fileInput.click());
+
+    ['dragenter','dragover'].forEach(evt=>dropzone.addEventListener(evt,e=>{e.preventDefault();dropzone.classList.add('dragover')}));
+    ['dragleave','dragend','drop'].forEach(evt=>dropzone.addEventListener(evt,e=>{e.preventDefault();dropzone.classList.remove('dragover')}));
+
+    dropzone.addEventListener('drop',e=>{const f = e.dataTransfer.files[0];handleFile(f)});
+    fileInput.addEventListener('change',e=>handleFile(e.target.files[0]));
+
+    function handleFile(file){
+      if(!file) return;
+      if(!file.type.startsWith('image/')){alert('Please upload an image');return}
+      currentFile = file;
+      thumbs.innerHTML = '';
+      const t = document.createElement('div');t.className='thumb';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      t.appendChild(img);
+      thumbs.appendChild(t);
+      status.textContent = 'Image ready';
+      resultWrap.innerHTML = '<div class="small">No result yet</div>';
+      currentResultBlob = null;
+      downloadBtn.disabled = true;
+    }
+
+    removeBgBtn.addEventListener('click',()=>{
+      if(!currentFile){alert('Pick an image first');return}
+      const provider = 'removebg';
+      const key = 'LDDKjHdNcW7hfKKtfrkv1RpQ';
+      uploadAndRemove({file:currentFile,provider,key});
+    });
+
+    async function uploadAndRemove({file,provider,key,customEndpoint}){
+      status.textContent = 'Uploading...';
+      progressBar.style.width = '6%';
+
+      try{
+        let endpoint;
+        let headers = {};
+        let form = new FormData();
+        form.append('image_file', file);
+
+        if(provider==='removebg'){
+          endpoint = 'https://api.remove.bg/v1.0/removebg';
+          headers['X-Api-Key'] = key; // remove.bg header
+        } else if(provider==='removalai'){
+          endpoint = 'https://api.removal.ai/3.0/remove';
+          headers['Rm-Token'] = key; // removal.ai header
+          form.append('get_file','1');
+        } else {
+          endpoint = customEndpoint;
+        }
+
+        status.textContent = 'Processing';
+
+        const resp = await fetch(endpoint,{
+          method:'POST',
+          headers,
+          body: form
+        });
+
+        if(!resp.ok){
+          const txt = await resp.text();
+          throw new Error('API Error: '+resp.status+' - '+txt.slice(0,300));
+        }
+
+        const blob = await resp.blob();
+        currentResultBlob = blob;
+        const url = URL.createObjectURL(blob);
+        resultWrap.innerHTML = '';
+        const im = document.createElement('img');
+        im.src = url;
+        resultWrap.appendChild(im);
+        downloadBtn.disabled = false;
+        downloadBtn.onclick = ()=>downloadBlob(blob,'result.png');
+        status.textContent = 'Done';
+        progressBar.style.width = '100%';
+      }catch(err){
+        console.error(err);
+        status.textContent = 'Error — see console';
+        resultWrap.innerHTML = '<div class="small" style="color:#ffb4b4">'+(err.message||'Unknown error')+'</div>';
+        progressBar.style.width = '0%';
+      }
+    }
+
+    function downloadBlob(blob,filename){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    resetBtn.addEventListener('click',()=>{thumbs.innerHTML='';resultWrap.innerHTML='<div class="small">No result yet</div>';status.textContent='Ready';progressBar.style.width='0%';currentFile=null;currentResultBlob=null;downloadBtn.disabled=true;fileInput.value='';});
+
+    // Animate progress artificially (cross-origin uploads won't provide progress)
+    let prog = 0;setInterval(()=>{if(progressBar.style.width && progressBar.style.width!=='100%'){prog = Math.min(100, prog + Math.random()*6); progressBar.style.width = prog + '%';}},360);
+
+    // Small keyboard shortcuts
+    window.addEventListener('keydown',e=>{if(e.ctrlKey && e.key==='k'){e.preventDefault();}});
+  </script>
+</body>
+</html>
